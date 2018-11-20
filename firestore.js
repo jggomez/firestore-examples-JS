@@ -202,39 +202,3 @@ $(() => {
     userDAO.queryPostsByTituloAndAutor('Test1', 'juan@gmail.com')
   })
 })
-
-/* userDAO.add({
-    nombre: "pedro",
-    apellidos: "torres",
-    email: "pedro@gmail.com",
-    valorFacturado: 420000,
-    tecnico: { nombre: "tecnico1", email: "tecnico1@gmail.com" }
-}, "14638228")
-
-userDAO.addWithKey({
-    nombre: "juan",
-    apellidos: "gomez",
-    email: "juan@gmail.com",
-    valorFacturado: 420000,
-    tecnico: { nombre: "tecnico2", email: "tecnico2@gmail.com" }
-}) */
-
-// userDAO.addWithMerge(5, '14638228');
-
-// userDAO.update('14638228', 40);
-
-// userDAO.updateObject("14638228");
-
-// userDAO.querySingleUser("G1t36YBHKqWg9oNQDrVM");
-
-// userDAO.queryUserByName("pedro");
-
-// userDAO.queryUserByNameAndLastName("pedro", "torres")
-
-// userDAO.allUsers();
-
-// userDAO.listenerUser("14638228");
-
-// userDAO.deleteFields("14638228");
-
-// userDAO.delete("14638228");
