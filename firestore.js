@@ -1,153 +1,240 @@
+class PostDAO {
+  constructor () {
+    this.db = firebase.firestore()
+    const settings = { timestampsInSnapshots: true }
+    this.db.settings(settings)
+  }
 
-class UserDAO {
+  add (post, id) {
+    this.db.collection('posts').doc(id).set({
+      titulo: post.titulo,
+      descripcion: post.descripcion,
+      autor: post.autor,
+      fecha: firebase.firestore.FieldValue.serverTimestamp()
+    })
 
-    constructor() {
-        this.db = firebase.firestore();
-        const settings = { timestampsInSnapshots: true };
-        this.db.settings(settings);
-    }
+    console.log('Se crea post')
+  }
 
-    add(user, id) {
-        this.db.collection("usuarios").doc(id).set({
-            nombre: user.nombre,
-            apellidos: user.apellidos,
-            email: user.email,
-            valorFacturado: user.valorFacturado,
-            tecnico: user.tecnico
-        });
-    }
+  batch () {
+    const batch = this.db.batch()
 
-    addWithKey(user) {
-        this.db.collection("usuarios").add({
-            nombre: user.nombre,
-            apellidos: user.apellidos,
-            email: user.email,
-            valorFacturado: user.valorFacturado,
-            tecnico: user.tecnico
-        }).then(docRef => {
-            console.log(`UID is => ${docRef.id}`);
-        });
-    }
+    const ref1 = this.db.collection('posts').doc('123456789')
+    batch.set(ref1, { titulo: '123456789' })
 
-    addWithMerge(numHectareas, idUser) {
-        this.db.collection("usuarios").doc(idUser).set({
-            numHectareas: numHectareas
-        }, { merge: true });
-    }
+    const ref2 = this.db.collection('posts').doc('987654321')
+    batch.set(ref2, { titulo: '987654321' })
 
-    update(idUser, numHectareasNew) {
-        let refUser = this.db.collection("usuarios").doc(idUser);
+    const ref3 = this.db.collection('posts').doc('456789')
+    batch.set(ref3, { titulo: '456789' })
 
-        refUser.update({
-            numHectareas: numHectareasNew
+    batch
+      .commit()
+      .then(() => {
+        console.log('Batch correcto')
+      })
+      .catch(error => console.error(error))
+  }
+
+  addWithKey (post) {
+    this.db
+      .collection('posts')
+      .add({
+        titulo: post.titulo,
+        descripcion: post.descripcion,
+        autor: post.autor,
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(docRef => {
+        console.log(`UID is => ${docRef.id}`)
+      })
+  }
+
+  addWithMerge (imagenLink, id) {
+    console.log(`Post => ${id}, se agrega imangenlink`)
+    this.db.collection('posts').doc(id).set(
+      {
+        imagenLink: imagenLink
+      },
+      { merge: true }
+    )
+  }
+
+  update (imagenLink, id) {
+    let refUser = this.db.collection('posts').doc(id)
+    console.log(`Post => ${id}, se actualiza imangenlink`)
+
+    refUser.update({
+      imagenLink: imagenLink
+    })
+  }
+
+  updateObject (id) {
+    console.log(`Post => ${id}, se agrega post.categoria`)
+    let refUser = this.db.collection('posts').doc(id)
+
+    refUser.update({
+      'post.categoria': '1'
+    })
+  }
+
+  deleteFields (id) {
+    console.log(`Post => ${id}, se elimina imagenLink`)
+    this.db.collection('posts').doc(id).update({
+      imagenLink: firebase.firestore.FieldValue.delete()
+    })
+  }
+
+  delete (id) {
+    console.log(`Post => ${id}, se elimina`)
+    this.db.collection('posts').doc(id).delete()
+  }
+
+  querySingle (id) {
+    let ref = this.db.collection('posts').doc(id)
+    ref.get().then(respDoc => {
+      console.log(`querySingle postID ${id} => ${respDoc.data().titulo}`)
+    })
+  }
+
+  queryByTitulo (titulo) {
+    this.db
+      .collection('posts')
+      .where('titulo', '==', titulo)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          console.log(
+            `queryByTitulo postTitulo ${titulo}=> ${doc.data().titulo}`
+          )
         })
-    }
+      })
+  }
 
-    updateObject(idUser) {
-        let refUser = this.db.collection("usuarios").doc(idUser);
+  allPosts () {
+    this.db
+      .collection('posts')
+      .orderBy('titulo', 'asc')
+      .limit(3)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          console.log(`allPosts con Limit 2 => ${doc.data().titulo}`)
+        })
+      })
+  }
 
-        refUser.update({
-            "tecnico.email": "cambiotecnico@gmail.com"
-        });
-    }
-
-    deleteFields(idUser) {
-        this.db.collection('usuarios').doc(idUser).update({
-            valorFacturado: firebase.firestore.FieldValue.delete()
-        });
-    }
-
-    delete(idUser) {
-        this.db.collection('usuarios').doc(idUser).delete();
-    }
-
-    querySingleUser(idUser) {
-        let ref = this.db.collection("usuarios").doc(idUser);
-        ref.get().then(respDoc => {
-            console.log(`querySingleUser => ${respDoc.data().nombre}`);
-        });
-    }
-
-    queryUserByName(name) {
-        this.db.collection("usuarios")
-            .where("nombre", "==", name)
-            .get()
-            .then(querySnapshot => {
-                querySnapshot.forEach(doc => {
-                    console.log(`queryUserByName => ${doc.data().nombre}`);
-                });
-            })
-    }
-
-    allUsers() {
-        this.db.collection("usuarios")
-            .orderBy("nombre", "asc")
-            .limit(2)
-            .get()
-            .then(querySnapshot => {
-                querySnapshot.forEach(doc => {
-                    console.log(`allUsers => ${doc.data().nombre}`);
-                });
-            })
-    }
-
-    queryUserByNameAndLastName(name, lastName) {
-        this.db.collection("usuarios")
-            .where("nombre", "==", name)
-            .where("apellidos", "==", lastName)
-            .get()
-            .then(querySnapshot => {
-                querySnapshot.forEach(doc => {
-                    console.log(`queryUserByNameAndLastName => ${doc.data().nombre}`);
-                });
-            })
-    }
-
-    listenerUser(idUser) {
-        this.db.collection("usuarios").doc(idUser)
-            .onSnapshot(doc => {
-                console.log("User cambiado: ", doc.data());
-            });
-    }
-
+  queryPostsByTituloAndAutor (titulo, autor) {
+    this.db
+      .collection('posts')
+      .where('titulo', '==', titulo)
+      .where('autor', '==', autor)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          console.log(
+            `queryPostsByTituloAndAutor Titulo:${titulo}, autor:${autor} => ${doc.data().titulo}`
+          )
+        })
+      })
+  }
 }
 
-const userDAO = new UserDAO();
+$(() => {
+  const userDAO = new PostDAO()
 
-/*userDAO.add({
+  $('#btnAdd').click(() => {
+    userDAO.add(
+      {
+        titulo: 'Test1',
+        descripcion: 'Test1 Desc',
+        autor: 'juan@gmail.com'
+      },
+      '14638228'
+    )
+  })
+
+  $('#btnBatch').click(() => {
+    userDAO.batch()
+  })
+
+  $('#btnAddKey').click(() => {
+    userDAO.addWithKey({
+      titulo: 'Test1',
+      descripcion: 'Test1 Desc',
+      autor: 'juan@gmail.com'
+    })
+  })
+
+  $('#btnAddWithMerge').click(() => {
+    userDAO.addWithMerge('ImageLink', '14638228')
+  })
+
+  $('#btnupdate').click(() => {
+    userDAO.update('ImageLinkUpdate', '14638228')
+  })
+
+  $('#btnUpdateObject').click(() => {
+    userDAO.updateObject('14638228')
+  })
+
+  $('#btnDeleteFields').click(() => {
+    userDAO.deleteFields('14638228')
+  })
+
+  $('#btnDelete').click(() => {
+    userDAO.delete('14638228')
+  })
+
+  $('#btnQuerySingle').click(() => {
+    userDAO.querySingle('14638228')
+  })
+
+  $('#queryByTitulo').click(() => {
+    userDAO.queryByTitulo('Test1')
+  })
+
+  $('#queryAllPosts').click(() => {
+    userDAO.allPosts()
+  })
+
+  $('#queryPostsByTituloAndAutor').click(() => {
+    userDAO.queryPostsByTituloAndAutor('Test1', 'juan@gmail.com')
+  })
+})
+
+/* userDAO.add({
     nombre: "pedro",
     apellidos: "torres",
     email: "pedro@gmail.com",
     valorFacturado: 420000,
     tecnico: { nombre: "tecnico1", email: "tecnico1@gmail.com" }
-}, "14638228")*/
+}, "14638228")
 
-/*userDAO.addWithKey({
+userDAO.addWithKey({
     nombre: "juan",
     apellidos: "gomez",
     email: "juan@gmail.com",
     valorFacturado: 420000,
     tecnico: { nombre: "tecnico2", email: "tecnico2@gmail.com" }
-})*/
+}) */
 
-//userDAO.addWithMerge(5, '14638228');
+// userDAO.addWithMerge(5, '14638228');
 
-//userDAO.update('14638228', 40);
+// userDAO.update('14638228', 40);
 
-//userDAO.updateObject("14638228");
+// userDAO.updateObject("14638228");
 
-//userDAO.querySingleUser("14638228");
+// userDAO.querySingleUser("G1t36YBHKqWg9oNQDrVM");
 
-//userDAO.queryUserByName("pedro");
+// userDAO.queryUserByName("pedro");
 
-//userDAO.queryUserByNameAndLastName("pedro", "torres")
+// userDAO.queryUserByNameAndLastName("pedro", "torres")
 
-//userDAO.allUsers();
+// userDAO.allUsers();
 
-//userDAO.listenerUser("14638228");
+// userDAO.listenerUser("14638228");
 
-//userDAO.deleteFields("14638228");
+// userDAO.deleteFields("14638228");
 
-//userDAO.delete("14638228");
-
-
+// userDAO.delete("14638228");
